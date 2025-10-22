@@ -66,4 +66,9 @@ public abstract class XFile {
         }
         System.out.println("✅ " + name + " exported: " + file.getFileName());
     }
+
+    public List<List<XAttribute>> getData() {
+        return data;
+    }   
+
 }

@@ -1,29 +1,35 @@
 package com.aerok.partreq.domain.model;
 
 public class PartRequirementRow {
-    private String partReqTitle;
-    private String partReqType;
-    private String effTitle;
-    private String description;
-    private String removalReq;
-    private String shelfPerf;
-    private String hardSoft;
+
+    // ========== XPARTREQ ==========
+    private String partReqTitle;   // XPARTREQ.PARTREQ-TITLE
+    private String partReqType;    // XPARTREQ.PARTREQ-TYPE
+    private String descriptionReq; // XPARTREQ.DESCRIPTION
+    private String removalReq;     // XPARTREQ.REMOVAL-REQ
+    private String shelfPerf;      // XPARTREQ.SHELF-PERF
+    private String hardSoft;       // XPARTREQ.HARD-SOFT
     private String proRata;
     private String ratingCat;
-    // 추가 XFILE별 컬럼도 여기에 계속 확장
 
-    // Getter/Setter
+    // ========== XPARTREQWS ==========
+    private String descriptionWs;  // XPARTREQWS.DESCRIPTION
+    private String zone;           // XPARTREQWS.ZONE
+    private String area;           // XPARTREQWS.AREA
+
+    // ========== XPARTREQWSPARTS ==========
+    private String partNo;         // XPARTREQWSPARTS.PARTNO
+    private String serialNo;       // XPARTREQWSPARTS.SERIALNO
+
+    // ===== Getter / Setter =====
     public String getPartReqTitle() { return partReqTitle; }
     public void setPartReqTitle(String partReqTitle) { this.partReqTitle = partReqTitle; }
 
     public String getPartReqType() { return partReqType; }
     public void setPartReqType(String partReqType) { this.partReqType = partReqType; }
 
-    public String getEffTitle() { return effTitle; }
-    public void setEffTitle(String effTitle) { this.effTitle = effTitle; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getDescriptionReq() { return descriptionReq; }
+    public void setDescriptionReq(String descriptionReq) { this.descriptionReq = descriptionReq; }
 
     public String getRemovalReq() { return removalReq; }
     public void setRemovalReq(String removalReq) { this.removalReq = removalReq; }
@@ -33,6 +39,21 @@ public class PartRequirementRow {
 
     public String getHardSoft() { return hardSoft; }
     public void setHardSoft(String hardSoft) { this.hardSoft = hardSoft; }
+
+    public String getDescriptionWs() { return descriptionWs; }
+    public void setDescriptionWs(String descriptionWs) { this.descriptionWs = descriptionWs; }
+
+    public String getZone() { return zone; }
+    public void setZone(String zone) { this.zone = zone; }
+
+    public String getArea() { return area; }
+    public void setArea(String area) { this.area = area; }
+
+    public String getPartNo() { return partNo; }
+    public void setPartNo(String partNo) { this.partNo = partNo; }
+
+    public String getSerialNo() { return serialNo; }
+    public void setSerialNo(String serialNo) { this.serialNo = serialNo; }
 
     public String getProRata() { return proRata; }
     public void setProRata(String proRata) { this.proRata = proRata; }

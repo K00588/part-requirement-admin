@@ -1,52 +1,90 @@
 package com.aerok.partreq.infra;
-
 import com.aerok.partreq.domain.model.PartRequirementRow;
-import org.apache.poi.ss.usermodel.*;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
+import com.aerok.partreq.domain.xfile.XFileManager;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 public class ExcelReader {
 
-    /**
-     * Excel 파일을 읽어서 PartRequirementRow 리스트를 반환
-     */
     public static List<PartRequirementRow> read(String filePath) {
         List<PartRequirementRow> rows = new ArrayList<>();
 
-        try (FileInputStream fis = new FileInputStream(filePath);
-             Workbook workbook = WorkbookFactory.create(fis)) {
+        try (Workbook workbook = WorkbookFactory.create(new File(filePath))) {
+            Sheet sheet = workbook.getSheetAt(0); // 첫 번째 시트
+            Row headerRow = sheet.getRow(0);
 
-            Sheet sheet = workbook.getSheetAt(0);
-            Iterator<Row> iterator = sheet.iterator();
-
-            // 첫 행(헤더) 건너뛰기
-            if (iterator.hasNext()) iterator.next();
-
-            while (iterator.hasNext()) {
-                Row row = iterator.next();
-                PartRequirementRow record = new PartRequirementRow();
-
-                record.setPartReqTitle(getString(row, 0));
-                record.setPartReqType(getString(row, 1));
-                record.setEffTitle(getString(row, 2));
-                record.setDescription(getString(row, 9));
-
-                rows.add(record);
+            // 엑셀 헤더 이름 읽기
+            List<String> headers = new ArrayList<>();
+            for (Cell cell : headerRow) {
+                headers.add(cell.getStringCellValue().trim());
             }
 
-        } catch (IOException e) {
-            throw new RuntimeException("❌ Excel 파일 읽기 실패: " + filePath, e);
+            // 데이터 행 반복
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row dataRow = sheet.getRow(i);
+                if (dataRow == null) continue;
+
+                // XFILE별로 필드 분류
+                Map<String, Map<String, String>> groupedByXfile = new HashMap<>();
+
+                for (int j = 0; j < headers.size(); j++) {
+                    String header = headers.get(j);
+                    String value = getCellValueAsString(dataRow.getCell(j));
+
+                    // "XPARTREQ.PARTREQ-TITLE" → ["XPARTREQ", "PARTREQ-TITLE"]
+                    String[] parts = header.split("\\.");
+                    if (parts.length != 2) continue;
+
+                    String xfileName = parts[0].trim();
+                    String fieldName = parts[1].trim();
+
+                    groupedByXfile
+                        .computeIfAbsent(xfileName, k -> new HashMap<>())
+                        .put(fieldName, value);
+                }
+
+                // XFILE별 PartRequirementRow 추가
+                for (String xfileName : groupedByXfile.keySet()) {
+                    PartRequirementRow row = mapToRow(groupedByXfile.get(xfileName));
+                    XFileManager.addRow(row, xfileName);  // 나중에 TXT로 뽑을 관리 클래스
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        System.out.println("✅ Excel 로드 완료 (" + rows.size() + " rows)");
         return rows;
     }
 
-    private static String getString(Row row, int colIdx) {
-        Cell cell = row.getCell(colIdx, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+    private static String getCellValueAsString(Cell cell) {
         if (cell == null) return "";
-        cell.setCellType(CellType.STRING);
-        return cell.getStringCellValue().trim();
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            default -> "";
+        };
+    }
+
+    private static PartRequirementRow mapToRow(Map<String, String> data) {
+        PartRequirementRow row = new PartRequirementRow();
+        // 여기서는 JSON의 "source"명과 동일한 setter만 있으면 됨
+        row.setPartReqTitle(data.getOrDefault("PARTREQ-TITLE", ""));
+        row.setPartReqType(data.getOrDefault("PARTREQ-TYPE", ""));
+        row.setDescriptionReq(data.getOrDefault("DESCRIPTION", ""));
+        row.setRemovalReq(data.getOrDefault("REMOVAL-REQ", ""));
+        row.setShelfPerf(data.getOrDefault("SHELF-PERF", ""));
+        row.setHardSoft(data.getOrDefault("HARD-SOFT", ""));
+        return row;
     }
 }
